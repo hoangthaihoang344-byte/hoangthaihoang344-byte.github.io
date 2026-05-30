@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản Lý Trang Chủ GitHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bg4:#2d333b;
+  --border:#30363d;--border2:#444c56;
+  --gold:#f0a500;--gold2:#ffc947;
+  --green:#3fb950;--blue:#58a6ff;--red:#f85149;--purple:#bc8cff;--orange:#db6d28;
+  --text:#e6edf3;--text2:#8b949e;--text3:#484f58;
+  --fn:'Be Vietnam Pro',sans-serif;--mono:'JetBrains Mono',monospace;
+  --radius:8px;--radius-lg:12px;
+}
+html,body{min-height:100vh;font-family:var(--fn);background:var(--bg);color:var(--text);font-size:14px;}
+
+/* LAYOUT */
+.app{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+.topbar-logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--orange));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#000;flex-shrink:0;}
+.topbar-title{font-size:15px;font-weight:700;}
+.topbar-title span{color:var(--gold);}
+.topbar-sub{font-size:11px;color:var(--text3);margin-left:2px;}
+.topbar-actions{margin-left:auto;display:flex;gap:8px;}
+
+.main{display:flex;flex:1;height:calc(100vh - 57px);}
+.sidebar{width:320px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.content{flex:1;overflow-y:auto;padding:20px;}
+
+/* SIDEBAR */
+.sidebar-header{padding:16px;border-bottom:1px solid var(--border);}
+.sidebar-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;}
+.tools-list{flex:1;overflow-y:auto;padding:8px;}
+.tool-item{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);
+  padding:10px 12px;margin-bottom:6px;cursor:pointer;
+  display:flex;align-items:center;gap:10px;
+  transition:all .15s;position:relative;
+}
+.tool-item:hover{border-color:var(--border2);}
+.tool-item.active{border-color:var(--gold);background:rgba(240,165,0,.08);}
+.tool-item-icon{font-size:20px;flex-shrink:0;}
+.tool-item-info{flex:1;min-width:0;}
+.tool-item-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tool-item-url{font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tool-item-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s;}
+.tool-item:hover .tool-item-actions{opacity:1;}
+.btn-icon{background:none;border:none;cursor:pointer;padding:4px;border-radius:4px;font-size:14px;color:var(--text2);transition:all .15s;}
+.btn-icon:hover{background:var(--bg4);color:var(--text);}
+.btn-icon.del:hover{color:var(--red);}
+
+.sidebar-footer{padding:12px;border-top:1px solid var(--border);}
+
+/* BUTTONS */
+.btn{border:none;cursor:pointer;font-family:var(--fn);font-weight:600;border-radius:var(--radius);transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--gold);color:#000;padding:9px 16px;font-size:13px;}
+.btn-primary:hover{background:var(--gold2);}
+.btn-secondary{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 16px;font-size:13px;}
+.btn-secondary:hover{border-color:var(--border2);background:var(--bg4);}
+.btn-success{background:#1a7f37;color:#fff;padding:9px 16px;font-size:13px;}
+.btn-success:hover{background:#2ea043;}
+.btn-danger{background:transparent;border:1px solid var(--border);color:var(--red);padding:9px 16px;font-size:13px;}
+.btn-danger:hover{background:rgba(248,81,73,.1);border-color:var(--red);}
+.btn-full{width:100%;justify-content:center;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+
+/* FORM */
+.form-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;}
+.form-section-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.form-section-title::before{content:'';width:3px;height:14px;background:var(--gold);border-radius:2px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-group{margin-bottom:12px;}
+.form-group:last-child{margin-bottom:0;}
+.form-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;display:block;}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;color:var(--text);font-family:var(--fn);font-size:13px;outline:none;transition:border-color .15s;}
+.form-input:focus{border-color:var(--gold);}
+.form-input::placeholder{color:var(--text3);}
+.form-hint{font-size:11px;color:var(--text3);margin-top:4px;}
+
+/* COLOR PICKER */
+.color-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.color-opt{width:28px;height:28px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all .15s;position:relative;}
+.color-opt:hover{transform:scale(1.1);}
+.color-opt.selected{border-color:#fff;transform:scale(1.1);}
+.color-opt.selected::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;}
+
+/* ICON PICKER */
+.icon-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.icon-opt{width:36px;height:36px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .15s;}
+.icon-opt:hover{border-color:var(--border2);background:var(--bg4);}
+.icon-opt.selected{border-color:var(--gold);background:rgba(240,165,0,.1);}
+
+/* PREVIEW */
+.preview-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;}
+.preview-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.preview-title::before{content:'';width:3px;height:14px;background:var(--blue);border-radius:2px;}
+.preview-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;display:flex;align-items:center;gap:14px;
+  position:relative;overflow:hidden;transition:all .2s;
+}
+.preview-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--preview-color,var(--gold));border-radius:3px 0 0 3px;}
+.preview-icon{width:42px;height:42px;border-radius:9px;background:var(--bg4);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.preview-info{flex:1;}
+.preview-name{font-size:14px;font-weight:700;margin-bottom:3px;}
+.preview-desc{font-size:11px;color:var(--text2);}
+.preview-tags{display:flex;gap:6px;margin-top:6px;}
+.preview-tag{background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:10px;color:var(--text2);}
+.preview-arrow{color:var(--text3);font-size:18px;}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:48px 20px;color:var(--text3);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+.empty-text{font-size:14px;font-weight:500;margin-bottom:6px;color:var(--text2);}
+.empty-sub{font-size:12px;}
+
+/* OUTPUT */
+.output-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.output-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.output-title{font-size:13px;font-weight:600;color:var(--text2);}
+.output-code{padding:16px;font-family:var(--mono);font-size:11px;color:var(--text2);max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;line-height:1.6;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;font-size:13px;font-weight:500;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;display:flex;align-items:center;gap:8px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{border-color:var(--green);color:var(--green);}
+.toast.error{border-color:var(--red);color:var(--red);}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.tab{padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* BADGE */
+.badge-new{background:rgba(63,185,80,.15);border:1px solid rgba(63,185,80,.3);color:var(--green);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:6px;}
+
+/* INFO BOX */
+.info-box{background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.2);border-radius:var(--radius);padding:12px 14px;font-size:12px;color:var(--blue);margin-bottom:16px;line-height:1.6;}
+
+.divider{height:1px;background:var(--border);margin:16px 0;}
+
+/* PROFILE SECTION */
+.profile-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">G</div>
+  <div>
+    <div class="topbar-title">Quản Lý <span>Trang Chủ</span></div>
+    <div class="topbar-sub">GitHub Pages Manager</div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-success btn-sm" onclick="xuatFile()">⬇ Xuất file index.html</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SIDEBAR: DANH SÁCH TOOL -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">Danh sách công cụ</div>
+      <button class="btn btn-primary btn-full" onclick="themMoi()">＋ Thêm công cụ mới</button>
+    </div>
+    <div class="tools-list" id="toolsList">
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-text">Chưa có công cụ nào</div>
+        <div class="empty-sub">Nhấn "Thêm công cụ mới" để bắt đầu</div>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div style="font-size:11px;color:var(--text3);text-align:center;">
+        <span id="toolCount">0</span> công cụ · Nhấn "Xuất file" để lưu
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT: FORM CHỈNH SỬA -->
+  <div class="content" id="mainContent">
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('chinh-sua')">✏️ Chỉnh sửa</div>
+      <div class="tab" onclick="switchTab('thong-tin')">👤 Thông tin cá nhân</div>
+      <div class="tab" onclick="switchTab('xem-truoc')">👁 Xem trước</div>
+    </div>
+
+    <!-- TAB: CHỈNH SỬA -->
+    <div class="tab-panel active" id="tab-chinh-sua">
+      <div id="formWrap">
+        <div class="empty-state" style="padding:80px 20px;">
+          <div class="empty-icon">👈</div>
+          <div class="empty-text">Chọn công cụ để chỉnh sửa</div>
+          <div class="empty-sub">hoặc nhấn "Thêm công cụ mới"</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: THÔNG TIN -->
+    <div class="tab-panel" id="tab-thong-tin">
+      <div class="profile-section">
+        <div class="form-section-title">Thông tin hiển thị trên trang chủ</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Họ tên</label>
+            <input class="form-input" id="profileName" value="Hoàng Thái Hoàng" placeholder="Tên của bạn">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Chữ in đậm / màu vàng</label>
+            <input class="form-input" id="profileNameBold" value="Hoàng" placeholder="Phần tên in màu vàng">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mô tả ngắn</label>
+          <input class="form-input" id="profileDesc" value="Kho công cụ cá nhân" placeholder="VD: Kho công cụ cá nhân">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Chữ cái hiển thị trên avatar</label>
+          <input class="form-input" id="profileAvatar" value="H" placeholder="1-2 chữ cái" maxlength="2" style="width:80px;">
+        </div>
+        <button class="btn btn-primary" onclick="luuThongTin()">💾 Lưu thông tin</button>
+      </div>
+    </div>
+
+    <!-- TAB: XEM TRƯỚC -->
+    <div class="tab-panel" id="tab-xem-truoc">
+      <div class="info-box">👁 Đây là bản xem trước trang chủ của bạn. Nhấn "Xuất file index.html" để tải về và up lên GitHub.</div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+        <iframe id="previewFrame" style="width:100%;height:500px;border:none;" srcdoc="<p style='color:#888;text-align:center;padding:40px;font-family:sans-serif'>Nhấn 'Cập nhật xem trước' để xem</p>"></iframe>
+      </div>
+      <br>
+      <button class="btn btn-secondary btn-full" onclick="capNhatXemTruoc()">🔄 Cập nhật xem trước</button>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== DATA ==========
+let tools = JSON.parse(localStorage.getItem('gh_tools') || '[]');
+let profile = JSON.parse(localStorage.getItem('gh_profile') || '{"name":"Hoàng Thái Hoàng","bold":"Hoàng","desc":"Kho công cụ cá nhân","avatar":"H"}');
+let selectedId = null;
+
+const COLORS = [
+  {hex:'#f0a500',label:'Vàng'},
+  {hex:'#3ecf8e',label:'Xanh lá'},
+  {hex:'#58a6ff',label:'Xanh dương'},
+  {hex:'#bc8cff',label:'Tím'},
+  {hex:'#f85149',label:'Đỏ'},
+  {hex:'#db6d28',label:'Cam'},
+  {hex:'#79c0ff',label:'Xanh nhạt'},
+  {hex:'#56d364',label:'Lá nhạt'},
+  {hex:'#ffa657',label:'Cam nhạt'},
+  {hex:'#ff7b72',label:'Đỏ nhạt'},
+];
+
+const ICONS = ['💰','🧾','📊','📋','💼','🗂','🏢','📈','📉','💡','🔧','⚙️','🛠','📱','💻','🖥','📝','✅','🗓','⏱','🔔','📌','🔑','🏆','🎯','🚀','📦','🧮','💳','🏦'];
+
+const TAGS = [
+  {icon:'💼',label:'Công việc'},
+  {icon:'📊',label:'Tính toán'},
+  {icon:'📋',label:'Thuế'},
+  {icon:'🏢',label:'Quản lý'},
+  {icon:'📈',label:'Tài chính'},
+  {icon:'🗓',label:'Lịch'},
+  {icon:'📱',label:'Mobile'},
+  {icon:'🔧',label:'Tiện ích'},
+  {icon:'📦',label:'Kho hàng'},
+  {icon:'👥',label:'Nhân sự'},
+];
+
+// ========== INIT ==========
+function init() {
+  // Load data vào form thông tin
+  document.getElementById('profileName').value = profile.name || '';
+  document.getElementById('profileNameBold').value = profile.bold || '';
+  document.getElementById('profileDesc').value = profile.desc || '';
+  document.getElementById('profileAvatar').value = profile.avatar || '';
+
+  // Nếu chưa có tool nào, thêm 2 tool mẫu
+  if(tools.length === 0) {
+    tools = [
+      {id:1,icon:'💰',name:'Phần Mềm Tính Lương',desc:'Tính lương, thưởng, phụ cấp, bảo hiểm và các khoản khấu trừ',repo:'tinhluong',color:'#f0a500',tags:['💼 Công việc','📊 Tính toán'],isNew:true},
+      {id:2,icon:'🧾',name:'Phần Mềm Tính Thuế',desc:'Tính thuế thu nhập cá nhân, các khoản giảm trừ và hoàn thuế',repo:'tinhthue',color:'#3ecf8e',tags:['💼 Công việc','📋 Thuế'],isNew:true},
+      {id:3,icon:'📦',name:'Kiểm Kho',desc:'Kiểm kho cuối ngày, tạo tin nhắn đặt hàng gửi bạn hàng qua Zalo',repo:'kiem-kho',color:'#00b4d8',tags:['📦 Kho hàng','🔧 Tiện ích'],isNew:true},
+    ];
+    saveTools();
+  }
+  renderList();
+}
+
+function saveTools() {
+  localStorage.setItem('gh_tools', JSON.stringify(tools));
+  document.getElementById('toolCount').textContent = tools.length;
+}
+
+// ========== RENDER LIST ==========
+function renderList() {
+  const el = document.getElementById('toolsList');
+  document.getElementById('toolCount').textContent = tools.length;
+  if(tools.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">Chưa có công cụ nào</div><div class="empty-sub">Nhấn "Thêm công cụ mới" để bắt đầu</div></div>`;
+    return;
+  }
+  el.innerHTML = tools.map(t => `
+    <div class="tool-item ${selectedId===t.id?'active':''}" onclick="chonTool(${t.id})">
+      <div class="tool-item-icon">${t.icon}</div>
+      <div class="tool-item-info">
+        <div class="tool-item-name">${t.name}</div>
+        <div class="tool-item-url">/${t.repo}/</div>
+      </div>
+      <div class="tool-item-actions">
+        <button class="btn-icon del" onclick="xoaTool(event,${t.id})">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ========== CHỌN / SỬA TOOL ==========
+function chonTool(id) {
+  selectedId = id;
+  renderList();
+  const t = tools.find(x=>x.id===id);
+  if(!t) return;
+  switchTab('chinh-sua');
+  renderForm(t);
+}
+
+function renderForm(t) {
+  const colorGrid = COLORS.map(c => `
+    <div class="color-opt ${t.color===c.hex?'selected':''}" style="background:${c.hex}" title="${c.label}" onclick="chonMau('${c.hex}',this)"></div>
+  `).join('');
+
+  const iconGrid = ICONS.map(ic => `
+    <div class="icon-opt ${t.icon===ic?'selected':''}" onclick="chonIcon('${ic}',this)">${ic}</div>
+  `).join('');
+
+  const tagChecks = TAGS.map(tag => {
+    const val = `${tag.icon} ${tag.label}`;
+    return `<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:4px 0;">
+      <input type="checkbox" ${t.tags&&t.tags.includes(val)?'checked':''} onchange="updateTags(${t.id})" data-tag="${val}" style="accent-color:var(--gold)">
+      ${val}
+    </label>`;
+  }).join('');
+
+  document.getElementById('formWrap').innerHTML = `
+    <div class="form-section">
+      <div class="form-section-title">Thông tin cơ bản</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tên công cụ</label>
+          <input class="form-input" id="fName" value="${t.name}" oninput="capNhatTool(${t.id})" placeholder="VD: Phần Mềm Tính Lương">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tên repo GitHub</label>
+          <input class="form-input" id="fRepo" value="${t.repo}" oninput="capNhatTool(${t.id})" placeholder="VD: tinhluong">
+          <div class="form-hint">Link sẽ là: ...github.io/<b>${t.repo}</b>/</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mô tả</label>
+        <input class="form-input" id="fDesc" value="${t.desc}" oninput="capNhatTool(${t.id})" placeholder="Mô tả ngắn về công cụ">
+      </div>
+      <div class="form-group">
+        <label class="form-label">
+          <input type="checkbox" ${t.isNew?'checked':''} id="fNew" onchange="capNhatTool(${t.id})" style="accent-color:var(--gold)">
+          Hiển thị badge "NEW"
+        </label>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Icon</div>
+      <div class="icon-grid" id="iconGrid">${iconGrid}</div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Màu sắc</div>
+      <div class="color-grid" id="colorGrid">${colorGrid}</div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Tags phân loại</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">${tagChecks}</div>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-danger" onclick="xoaTool(null,${t.id})">🗑 Xóa</button>
+      <button class="btn btn-success" style="margin-left:auto;" onclick="xuatFile()">⬇ Xuất file ngay</button>
+    </div>
+  `;
+}
+
+function capNhatTool(id) {
+  const t = tools.find(x=>x.id===id);
+  if(!t) return;
+  t.name = document.getElementById('fName').value;
+  t.repo = document.getElementById('fRepo').value;
+  t.desc = document.getElementById('fDesc').value;
+  t.isNew = document.getElementById('fNew').checked;
+  saveTools();
+  renderList();
+  // update hint
+  const hints = document.querySelectorAll('.form-hint b');
+  if(hints[0]) hints[0].textContent = t.repo;
+}
+
+function updateTags(id) {
+  const t = tools.find(x=>x.id===id);
+  if(!t) return;
+  t.tags = Array.from(document.querySelectorAll('[data-tag]:checked')).map(el=>el.dataset.tag);
+  saveTools();
+}
+
+function chonMau(hex, el) {
+  document.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  const t = tools.find(x=>x.id===selectedId);
+  if(t) { t.color=hex; saveTools(); }
+}
+
+function chonIcon(ic, el) {
+  document.querySelectorAll('.icon-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  const t = tools.find(x=>x.id===selectedId);
+  if(t) { t.icon=ic; saveTools(); renderList(); }
+}
+
+// ========== THÊM MỚI ==========
+function themMoi() {
+  const newTool = {
+    id: Date.now(),
+    icon: '🔧',
+    name: 'Công cụ mới',
+    desc: 'Mô tả công cụ',
+    repo: 'tool-moi',
+    color: '#58a6ff',
+    tags: [],
+    isNew: true
+  };
+  tools.push(newTool);
+  saveTools();
+  chonTool(newTool.id);
+  showToast('✅ Đã thêm công cụ mới!','success');
+}
+
+// ========== XÓA ==========
+function xoaTool(e, id) {
+  if(e) e.stopPropagation();
+  if(!confirm('Xóa công cụ này?')) return;
+  tools = tools.filter(x=>x.id!==id);
+  if(selectedId===id) selectedId=null;
+  saveTools();
+  renderList();
+  document.getElementById('formWrap').innerHTML = `<div class="empty-state" style="padding:80px 20px;"><div class="empty-icon">👈</div><div class="empty-text">Chọn công cụ để chỉnh sửa</div><div class="empty-sub">hoặc nhấn "Thêm công cụ mới"</div></div>`;
+  showToast('🗑 Đã xóa công cụ','error');
+}
+
+// ========== LƯU THÔNG TIN ==========
+function luuThongTin() {
+  profile.name = document.getElementById('profileName').value;
+  profile.bold = document.getElementById('profileNameBold').value;
+  profile.desc = document.getElementById('profileDesc').value;
+  profile.avatar = document.getElementById('profileAvatar').value;
+  localStorage.setItem('gh_profile', JSON.stringify(profile));
+  showToast('✅ Đã lưu thông tin!','success');
+}
+
+// ========== TABS ==========
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const ids=['chinh-sua','thong-tin','xem-truoc'];
+    t.classList.toggle('active', ids[i]===id);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p=>{
+    p.classList.toggle('active', p.id==='tab-'+id);
+  });
+}
+
+// ========== XEM TRƯỚC ==========
+function capNhatXemTruoc() {
+  const html = taoHTML();
+  document.getElementById('previewFrame').srcdoc = html;
+  showToast('✅ Đã cập nhật xem trước','success');
+}
+
+// ========== TẠO HTML ==========
+function taoHTML() {
+  const toolCards = tools.map(t => {
+    const tags = (t.tags||[]).map(tag=>`<span class="tool-tag">${tag}</span>`).join('');
+    const badge = t.isNew ? `<span class="badge-new">NEW</span>` : '';
+    return `
+    <a class="tool-card" href="./${t.repo}/" style="--card-color:${t.color}" data-name="${t.name.toLowerCase()} ${t.repo}">
+      <div class="tool-icon">${t.icon}</div>
+      <div class="tool-info">
+        <div class="tool-name">${t.name} ${badge}</div>
+        <div class="tool-desc">${t.desc}</div>
+        <div class="tool-meta">${tags}</div>
+      </div>
+      <span class="tool-arrow">→</span>
+    </a>`;
+  }).join('\n');
+
+  // Tách tên thành phần in đậm
+  const nameParts = profile.name.split(profile.bold);
+  const displayName = profile.bold
+    ? nameParts[0] + `<span>${profile.bold}</span>` + (nameParts[1]||'')
+    : profile.name;
+
+  return `<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Công Cụ Cá Nhân — ${profile.name}</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--border:#30363d;--gold:#f0a500;--gold2:#ffc947;--text:#e6edf3;--text2:#8b949e;--text3:#484f58;--green:#3fb950;--orange:#db6d28;--fn:'Be Vietnam Pro',sans-serif;}
+html,body{min-height:100vh;font-family:var(--fn);background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50;}
+.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--orange));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#0d1117;flex-shrink:0;}
+.header-info h1{font-size:16px;font-weight:700;letter-spacing:-0.3px;}
+.header-info h1 span{color:var(--gold);}
+.header-info p{font-size:12px;color:var(--text2);}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);}
+.status-text{font-size:12px;color:var(--text2);}
+.hero{padding:48px 24px 32px;text-align:center;max-width:680px;margin:0 auto;}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:100px;padding:4px 14px;font-size:12px;color:var(--text2);margin-bottom:20px;}
+.hero h2{font-size:32px;font-weight:800;letter-spacing:-0.8px;line-height:1.2;margin-bottom:12px;}
+.hero h2 span{color:var(--gold);}
+.hero p{font-size:15px;color:var(--text2);max-width:420px;margin:0 auto;}
+.search-wrap{padding:0 24px 24px;max-width:680px;margin:0 auto;}
+.search-box{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px;transition:border-color .2s;}
+.search-box:focus-within{border-color:var(--gold);}
+.search-box input{background:none;border:none;outline:none;color:var(--text);font-size:14px;flex:1;font-family:var(--fn);}
+.search-box input::placeholder{color:var(--text3);}
+.stats{display:flex;gap:12px;padding:0 24px 28px;max-width:680px;margin:0 auto;}
+.stat-card{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-align:center;}
+.stat-num{font-size:24px;font-weight:800;color:var(--gold);}
+.stat-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;}
+.section{padding:0 24px 40px;max-width:680px;margin:0 auto;}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.section-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;}
+.section-line{flex:1;height:1px;background:var(--border);}
+.tools-grid{display:flex;flex-direction:column;gap:10px;}
+.tool-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;transition:all .2s;cursor:pointer;position:relative;overflow:hidden;}
+.tool-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--card-color,var(--gold));border-radius:3px 0 0 3px;opacity:0;transition:opacity .2s;}
+.tool-card:hover{border-color:var(--card-color,var(--gold));transform:translateX(3px);}
+.tool-card:hover::before{opacity:1;}
+.tool-icon{width:44px;height:44px;border-radius:10px;flex-shrink:0;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;}
+.tool-info{flex:1;min-width:0;}
+.tool-name{font-size:15px;font-weight:700;margin-bottom:3px;}
+.tool-desc{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tool-meta{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap;}
+.tool-tag{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:11px;color:var(--text2);}
+.tool-arrow{color:var(--text3);font-size:18px;flex-shrink:0;transition:transform .2s;}
+.tool-card:hover .tool-arrow{transform:translateX(4px);color:var(--card-color,var(--gold));}
+.add-card{background:transparent;border:1px dashed var(--border);border-radius:12px;padding:20px 18px;display:flex;align-items:center;gap:16px;color:var(--text3);}
+.add-icon{width:44px;height:44px;border-radius:10px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.add-text p{font-size:14px;font-weight:500;}
+.add-text span{font-size:12px;}
+.badge-new{background:rgba(63,185,80,.15);border:1px solid rgba(63,185,80,.3);color:var(--green);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;}
+footer{border-top:1px solid var(--border);padding:20px 24px;text-align:center;font-size:12px;color:var(--text3);max-width:680px;margin:0 auto;}
+footer span{color:var(--gold);}
+.tool-card.hidden{display:none;}
+@media(max-width:480px){.hero h2{font-size:26px;}.stats{gap:8px;}.stat-card{padding:10px 12px;}.stat-num{font-size:20px;}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="avatar">${profile.avatar||'H'}</div>
+  <div class="header-info">
+    <h1>${displayName}</h1>
+    <p>${profile.desc}</p>
+  </div>
+  <div class="header-right">
+    <div class="status-dot"></div>
+    <span class="status-text">Online</span>
+  </div>
+</header>
+<div class="hero">
+  <div class="hero-tag">⚡ Công cụ cá nhân</div>
+  <h2>Tất cả công cụ<br>của <span>bạn</span>, một nơi</h2>
+  <p>Truy cập nhanh từ bất kỳ thiết bị nào — máy tính, điện thoại, máy tính bảng.</p>
+</div>
+<div class="search-wrap">
+  <div class="search-box">
+    <span>🔍</span>
+    <input type="text" placeholder="Tìm công cụ..." oninput="filterTools(this.value)">
+  </div>
+</div>
+<div class="stats">
+  <div class="stat-card"><div class="stat-num">${tools.length}</div><div class="stat-label">Công cụ</div></div>
+  <div class="stat-card"><div class="stat-num">∞</div><div class="stat-label">Thiết bị</div></div>
+  <div class="stat-card"><div class="stat-num">100%</div><div class="stat-label">Miễn phí</div></div>
+</div>
+<div class="section">
+  <div class="section-header"><span class="section-title">Công cụ của tôi</span><div class="section-line"></div></div>
+  <div class="tools-grid">
+${toolCards}
+    <div class="add-card">
+      <div class="add-icon">＋</div>
+      <div class="add-text"><p>Thêm công cụ mới</p><span>Upload file HTML lên GitHub và thêm vào đây</span></div>
+    </div>
+  </div>
+</div>
+<footer>Được lưu trữ bởi <span>GitHub Pages</span> · Miễn phí & luôn online</footer>
+<script>
+function filterTools(q){
+  q=q.toLowerCase().trim();
+  document.querySelectorAll('.tool-card[data-name]').forEach(c=>{
+    c.classList.toggle('hidden',!(!q||c.dataset.name.includes(q)));
+  });
+}
+<\/script>
+</body>
+</html>`;
+}
+
+// ========== XUẤT FILE ==========
+function xuatFile() {
+  const html = taoHTML();
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'index.html';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('⬇ Đã tải file index.html!','success');
+}
+
+// ========== TOAST ==========
+function showToast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  setTimeout(()=>el.classList.remove('show'), 2500);
+}
+
+// ========== START ==========
+init();
+</script>
+</body>
+</html>
